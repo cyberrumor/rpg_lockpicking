@@ -3,6 +3,7 @@ Scriptname rpgLockpicking
 Function lockActivated(ObjectReference akTargetRef, Actor akActor, rpgLockpickingQuestScript lpq) global
     ; picklevel should be utilized to later add 0 through picklevel gold to
     ; locked containers.
+    ; TODO: Should this be the lockpicking skill instead of a string?
     ; int picklevel = akActor.getAV("lockpicking");
     int locklevel = akTargetRef.getLockLevel();
     int lockindex = (((locklevel+25) / 25) - 1) as int;
@@ -50,8 +51,7 @@ Function lockActivated(ObjectReference akTargetRef, Actor akActor, rpgLockpickin
             lpq.rpgLockpickingFailSound.play(akTargetRef);
             lpq.rpgLockpickingNoPickMessage.show();
             failed = true;
-        endif
-        if (!hasLevelPerk)
+        elseif (!hasLevelPerk)
             lpq.rpgLockpickingFailSound.play(akTargetRef);
             lpq.rpgLockpickingNoPerkMessage.show();
             failed = true;
@@ -74,8 +74,13 @@ Function lockActivated(ObjectReference akTargetRef, Actor akActor, rpgLockpickin
     lpq.rpgLockpickingUnlockSound.play(akTargetRef);
 
     ; If the player has the Skeleton Key, they shouldn't benefit from XP gain
-    ; or wax key. Return early.
+    ; or wax key. They should also ba ble to open any type of door that doesn't
+    ; strictly require a key (E.g., puzzle doors etc), then return early.
     if (hasSkeletonKey)
+        ; Quick hands should separate picking and opening
+        if (!akActor.hasPerk(lpq.Quickhands))
+            akTargetRef.activate(akActor, true);
+        endif
         return;
     endif
 
@@ -84,8 +89,8 @@ Function lockActivated(ObjectReference akTargetRef, Actor akActor, rpgLockpickin
     endif
 
     ; Handle xp gain. In vanilla, we get:
-    ; 0.25 base XP for a broken pick.
-    ; 2, 3, 5, 8, 13 base XP for successfully picking a lock. Fibonacci.
+    ;   0.25 base XP for a broken pick.
+    ;   2, 3, 5, 8, 13 base XP for successfully picking a lock. Fibonacci.
     ; Since we don't have a discrete event to break lockpicks, and since players
     ; won't be able to open every lock in every dungeon at low levels, we can
     ; add a bit more to Fibonacci compensate.
@@ -96,9 +101,15 @@ Function lockActivated(ObjectReference akTargetRef, Actor akActor, rpgLockpickin
     xp[3] = 8.0;
     xp[4] = 13.0;
     float xp_gained = xp[lockindex] + (lockindex * 0.35);
+
+    ; TODO: Should this be the lockpicking skill itself, or the string?
     Game.advanceSkill("lockpicking", xp_gained);
 
     akActor.RemoveItem(lpq.Lockpick, consumed_lockpicks, false);
 
-    akTargetRef.activate(akActor);
+    ; Quickhands should separate picking and opening
+    if (!akActor.hasPerk(lpq.Quickhands))
+        ; Should we use abDefaultProcessingOnly = True here like the others?
+        akTargetRef.activate(akActor);
+    endif
 EndFunction

@@ -23,7 +23,7 @@ EndFunction
 
 int version;
 Function DoUpdate() ;For handling future updates
-    if(version < 0)
+    if(version >= 0)
         init();
     endif
 EndFunction

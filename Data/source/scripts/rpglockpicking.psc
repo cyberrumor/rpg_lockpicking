@@ -1,10 +1,6 @@
 Scriptname rpgLockpicking
 
 Function lockActivated(ObjectReference akTargetRef, Actor akActor, rpgLockpickingQuestScript lpq) global
-    ; picklevel should be utilized to later add 0 through picklevel gold to
-    ; locked containers.
-    ; TODO: Should this be the lockpicking skill instead of a string?
-    ; int picklevel = akActor.getAV("lockpicking");
     int locklevel = akTargetRef.getLockLevel();
     int lockindex = (((locklevel+25) / 25) - 1) as int;
 
@@ -37,6 +33,11 @@ Function lockActivated(ObjectReference akTargetRef, Actor akActor, rpgLockpickin
     if (hasSmithPerk)
         consumed_lockpicks = consumed_lockpicks - 2;
     endif
+
+    ; picklevel should be utilized to later add 0 through picklevel gold to
+    ; locked containers.
+    ; int picklevel = akActor.getAV("lockpicking");
+    ; Debug.Trace(picklevel, 2); requires string
 
     ; unbreakable causes us to consume no lockpicks, and require just 1.
     bool hasUnbreakablePerk = akActor.hasPerk(lpq.Unbreakable);
@@ -102,7 +103,6 @@ Function lockActivated(ObjectReference akTargetRef, Actor akActor, rpgLockpickin
     xp[4] = 13.0;
     float xp_gained = xp[lockindex] + (lockindex * 0.35);
 
-    ; TODO: Should this be the lockpicking skill itself, or the string?
     Game.advanceSkill("lockpicking", xp_gained);
 
     akActor.RemoveItem(lpq.Lockpick, consumed_lockpicks, false);
